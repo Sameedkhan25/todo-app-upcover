@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -21,7 +21,6 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import { Task } from '../../../types';
-import ReactConfetti from 'react-confetti';
 import { useSwipeable } from 'react-swipeable';
 
 type Priority = 'low' | 'medium' | 'high';
@@ -68,24 +67,7 @@ const TaskItem: React.FC<TaskItemProps> = ({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [isHovered, setIsHovered] = useState(false);
-  const [showConfetti, setShowConfetti] = useState(false);
   const [swipeOffset, setSwipeOffset] = useState(0);
-  const [windowSize, setWindowSize] = useState({
-    width: window.innerWidth,
-    height: window.innerHeight,
-  });
-
-  useEffect(() => {
-    const handleResize = () => {
-      setWindowSize({
-        width: window.innerWidth,
-        height: window.innerHeight,
-      });
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   const swipeHandlers = useSwipeable({
     onSwiping: (event) => {
@@ -128,13 +110,17 @@ const TaskItem: React.FC<TaskItemProps> = ({
 
   const handleToggleComplete = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newCompletedState = event.target.checked;
-    if (newCompletedState) {
-      setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 3000);
+    if (!task?.id) {
+      console.error('Task or task ID is missing');
+      return;
     }
-    onToggleComplete(task.id, newCompletedState);
-    if (isMobile) {
-      setSwipeOffset(0);
+    try {
+      onToggleComplete(task.id, newCompletedState);
+      if (isMobile) {
+        setSwipeOffset(0);
+      }
+    } catch (error) {
+      console.error('Error toggling task completion:', error);
     }
   };
 
@@ -146,32 +132,32 @@ const TaskItem: React.FC<TaskItemProps> = ({
   };
 
   const handleDelete = () => {
-    onDelete(task.id);
-    if (isMobile) {
-      setSwipeOffset(0);
+    if (!task?.id) {
+      console.error('Task ID is missing');
+      return;
+    }
+    try {
+      onDelete(task.id);
+      if (isMobile) {
+        setSwipeOffset(0);
+      }
+    } catch (error) {
+      console.error('Error deleting task:', error);
     }
   };
 
   const handleActionClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click event
-    if (e.currentTarget.getAttribute('data-action') === 'edit') {
+    const action = e.currentTarget.getAttribute('data-action');
+    if (action === 'edit') {
       handleEdit();
-    } else if (e.currentTarget.getAttribute('data-action') === 'delete') {
+    } else if (action === 'delete') {
       handleDelete();
     }
   };
 
   return (
     <>
-      {showConfetti && (
-        <ReactConfetti
-          width={windowSize.width}
-          height={windowSize.height}
-          recycle={false}
-          numberOfPieces={200}
-          gravity={0.3}
-        />
-      )}
       <Box
         sx={{
           position: 'relative',
@@ -192,6 +178,8 @@ const TaskItem: React.FC<TaskItemProps> = ({
               borderRadius: { xs: 2, sm: 3 },
               overflow: 'hidden',
               zIndex: 0,
+              opacity: swipeOffset !== 0 ? 1 : 0,
+              transition: 'opacity 0.2s ease',
             }}
           >
             {/* Right swipe - Complete */}
@@ -292,7 +280,7 @@ const TaskItem: React.FC<TaskItemProps> = ({
               borderRadius: { xs: 2, sm: 3 },
               boxShadow: isHovered ? 4 : 2,
               transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              opacity: task.completed ? 0.8 : 1,
+              opacity: task.completed ? 0.85 : 1,
               transform: task.completed ? 'scale(0.98)' : 'scale(1)',
               bgcolor: (theme) => 
                 task.completed 
@@ -313,6 +301,9 @@ const TaskItem: React.FC<TaskItemProps> = ({
                 p: { xs: 2, sm: 3 },
                 '&:last-child': { pb: { xs: 2, sm: 3 } },
                 position: 'relative',
+                ...(task.completed && {
+                  bgcolor: (theme) => alpha(theme.palette.action.hover, 0.1),
+                }),
               }}
             >
               <Stack 
@@ -353,6 +344,7 @@ const TaskItem: React.FC<TaskItemProps> = ({
                       fontWeight: 500,
                       height: { xs: 24, sm: 32 },
                       minWidth: { xs: 72, sm: 86 },
+                      opacity: task.completed ? 0.8 : 1,
                       '& .MuiChip-icon': {
                         fontSize: { xs: 16, sm: 20 },
                         marginLeft: { xs: 0.5, sm: 1 },

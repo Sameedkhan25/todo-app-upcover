@@ -16,8 +16,9 @@ const TaskList: React.FC = () => {
   const { tasks, reorderTasks, editTask, deleteTask, toggleTaskStatus } = useTaskStore();
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   
-  const incompleteTasks = tasks?.filter(task => task?.completed === false) ?? [];
-  const completedTasks = tasks?.filter(task => task?.completed === true) ?? [];
+  // Ensure we only get valid tasks
+  const incompleteTasks = tasks?.filter(task => task && !task.completed) ?? [];
+  const completedTasks = tasks?.filter(task => task && task.completed) ?? [];
   
   const handleDragEnd = (result: DropResult) => {
     const { source, destination } = result;
@@ -27,16 +28,22 @@ const TaskList: React.FC = () => {
     }
 
     const sourceIsComplete = source.droppableId === 'completed';
-
+    const destinationIsComplete = destination.droppableId === 'completed';
+    const taskList = sourceIsComplete ? completedTasks : incompleteTasks;
+    
     // If moving between sections, toggle completion status
     if (source.droppableId !== destination.droppableId) {
-      const taskId = sourceIsComplete ? completedTasks[source.index].id : incompleteTasks[source.index].id;
-      toggleTaskStatus(taskId);
+      const task = taskList[source.index];
+      if (task?.id) {
+        toggleTaskStatus(task.id);
+      }
       return;
     }
 
     // If within same section, reorder
-    reorderTasks(source.index, destination.index, sourceIsComplete);
+    if (source.index !== destination.index) {
+      reorderTasks(source.index, destination.index, sourceIsComplete);
+    }
   };
 
   const handleEdit = (task: Task) => {
@@ -72,8 +79,23 @@ const TaskList: React.FC = () => {
     deleteTask(taskId);
   };
 
-  const handleToggleComplete = (taskId: string) => {
-    toggleTaskStatus(taskId);
+  const handleToggleComplete = (taskId: string, completed: boolean) => {
+    if (!taskId || typeof taskId !== 'string') {
+      console.error('Invalid task ID:', taskId);
+      return;
+    }
+    
+    const task = tasks?.find(t => t?.id === taskId);
+    if (!task) {
+      console.error('Task not found:', taskId);
+      return;
+    }
+    
+    try {
+      toggleTaskStatus(taskId);
+    } catch (error) {
+      console.error('Error toggling task status:', error);
+    }
   };
 
   const getDropStyle = (isDraggingOver: boolean) => ({
@@ -171,13 +193,13 @@ const TaskList: React.FC = () => {
       </Dialog>
 
       <DragDropContext onDragEnd={handleDragEnd}>
-        <Container maxWidth="md" sx={{ py: { xs: 2, sm: 4 } }}>
+        <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 3 } }}>
           <motion.div
-            variants={containerAnimation}
-            initial="hidden"
-            animate="show"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
           >
-            <Stack spacing={{ xs: 3, sm: 4, md: 5 }}>
+            <Stack spacing={4}>
               {/* Incomplete Tasks Section */}
               <motion.div variants={sectionAnimation}>
                 <Box>

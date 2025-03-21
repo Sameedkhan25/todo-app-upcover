@@ -95,54 +95,38 @@ const TaskForm: React.FC<TaskFormProps> = ({
   initialValues = { title: '', description: '', priority: 'low' as const },
   isEdit = false,
 }) => {
+  const { tasks } = useTaskStore();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [formData, setFormData] = useState<TaskInput>(initialValues);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const titleInputRef = useRef<HTMLInputElement>(null);
-  const { tasks } = useTaskStore();
+  const titleRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // Focus the title input when the form opens
-    if (titleInputRef.current) {
-      titleInputRef.current.focus();
-      // If editing, move cursor to the end of the text
-      if (isEdit) {
-        const length = titleInputRef.current.value.length;
-        titleInputRef.current.setSelectionRange(length, length);
-      }
+    if (titleRef.current) {
+      titleRef.current.focus();
     }
-  }, [isEdit]);
+  }, []);
 
   const validateInput = (input: TaskInput): string | null => {
-    // Title validations
     if (!input.title.trim()) {
       return 'Title is required';
     }
-    if (input.title.length > 100) {
-      return 'Title must be 100 characters or less';
+    if (!input.description.trim()) {
+      return 'Description is required';
     }
-
+    
     // Check for duplicate title only when adding new tasks
     if (!isEdit) {
-      const duplicateTask = tasks.find(
-        task => task.title.toLowerCase() === input.title.toLowerCase()
+      const duplicateTask = tasks?.find(
+        task => task?.title?.toLowerCase() === input.title.toLowerCase()
       );
       if (duplicateTask) {
         return 'A task with this title already exists';
       }
     }
-
-    // Description validations
-    if (!input.description.trim()) {
-      return 'Description is required';
-    }
-    const wordCount = input.description.trim().split(/\s+/).length;
-    if (wordCount > 100) {
-      return 'Description must be 100 words or less';
-    }
-
+    
     return null;
   };
 
@@ -152,28 +136,18 @@ const TaskForm: React.FC<TaskFormProps> = ({
     const validationError = validateInput(formData);
     if (validationError) {
       setError(validationError);
-      if (validationError.includes('Title')) {
-        titleInputRef.current?.focus();
-      }
       return;
     }
 
-    setIsSubmitting(true);
     try {
-      onSubmit({
-        ...formData,
-        priority: formData.priority || 'low',
-      });
+      onSubmit(formData);
+      // Reset form if not editing
       if (!isEdit) {
-        // Reset form only if it's not in edit mode
-        setFormData({ title: '', description: '', priority: 'low' });
-        titleInputRef.current?.focus();
+        setFormData(initialValues);
       }
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setIsSubmitting(false);
+      setError(err instanceof Error ? err.message : 'Failed to submit task');
     }
   };
 
@@ -300,7 +274,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
             <motion.div variants={itemAnimation}>
               <TextField
                 fullWidth
-                inputRef={titleInputRef}
+                inputRef={titleRef}
                 label="Task Title"
                 name="title"
                 value={formData.title}
