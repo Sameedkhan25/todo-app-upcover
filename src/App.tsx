@@ -17,18 +17,17 @@ function App() {
       <Box
         sx={{
           minHeight: '100vh',
-          minWidth: '100vw',
+          width: '100%',
           background: `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 100%)`,
-          py: { xs: 3, sm: 4, md: 5 },
-          px: { xs: 2, sm: 3 },
-          overflow: 'hidden',
+          py: { xs: 2, sm: 3, md: 4 },
+          overflow: 'auto',
           position: 'relative',
         }}
       >
         {/* Background Pattern */}
         <Box
           sx={{
-            position: 'absolute',
+            position: 'fixed',
             top: 0,
             left: 0,
             right: 0,
@@ -36,6 +35,7 @@ function App() {
             backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.1) 1px, transparent 0)',
             backgroundSize: '40px 40px',
             pointerEvents: 'none',
+            zIndex: 0,
           }}
         />
 
@@ -45,6 +45,7 @@ function App() {
             sx={{
               position: 'relative',
               zIndex: 1,
+              px: { xs: 2, sm: 3 },
             }}
           >
             <motion.div
@@ -55,8 +56,7 @@ function App() {
               <Box 
                 sx={{ 
                   textAlign: 'center', 
-                  mb: { xs: 3, sm: 4, md: 5 },
-                  px: { xs: 2, sm: 0 },
+                  mb: { xs: 3, sm: 4 },
                   color: 'white',
                   textShadow: '0 2px 4px rgba(0,0,0,0.2)'
                 }}
@@ -72,19 +72,19 @@ function App() {
                     mb: { xs: 1, sm: 2 }
                   }}
                 >
-                  Todo App
+                  Taskify
                 </Typography>
                 <Typography 
                   variant="h6" 
                   sx={{ 
                     opacity: 0.9,
-                    fontSize: { xs: '0.875rem', sm: '1rem', md: '1.25rem' },
+                    fontSize: { xs: '0.875rem', sm: '1rem', md: '1.125rem' },
                     maxWidth: '600px',
                     mx: 'auto',
                     lineHeight: 1.5
                   }}
                 >
-                  Manage your tasks efficiently with our beautiful and intuitive interface
+                  Transform your productivity with task management
                 </Typography>
               </Box>
             </motion.div>
@@ -97,13 +97,13 @@ function App() {
               <Box 
                 sx={{ 
                   bgcolor: 'background.paper', 
-                  p: { xs: 2, sm: 3, md: 4 }, 
+                  p: { xs: 2, sm: 3 }, 
                   borderRadius: { xs: 2, sm: 3 },
                   boxShadow: {
                     xs: '0 4px 16px rgba(0,0,0,0.1)',
                     sm: '0 8px 32px rgba(0,0,0,0.1)'
                   },
-                  mb: { xs: 2, sm: 3, md: 4 },
+                  mb: { xs: 2, sm: 3 },
                   backdropFilter: 'blur(10px)',
                   backgroundColor: 'rgba(255,255,255,0.95)',
                   transition: 'all 0.3s ease',
@@ -113,26 +113,13 @@ function App() {
                   }
                 }}
               >
-                <Typography 
-                  variant="h5" 
-                  component="h2" 
-                  gutterBottom
-                  sx={{ 
-                    color: theme.palette.primary.main,
-                    fontWeight: 600,
-                    fontSize: { xs: '1.125rem', sm: '1.25rem', md: '1.5rem' },
-                    mb: { xs: 2, sm: 3 }
-                  }}
-                >
-                  Add New Task
-                </Typography>
                 <TaskForm onSubmit={addTask} />
               </Box>
 
               <Box 
                 sx={{ 
                   bgcolor: 'background.paper', 
-                  p: { xs: 2, sm: 3, md: 4 }, 
+                  p: { xs: 2, sm: 3 }, 
                   borderRadius: { xs: 2, sm: 3 },
                   boxShadow: {
                     xs: '0 4px 16px rgba(0,0,0,0.1)',
