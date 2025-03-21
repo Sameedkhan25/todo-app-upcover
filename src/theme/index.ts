@@ -1,20 +1,26 @@
-import { createTheme } from '@mui/material/styles';
+import { createTheme, Theme } from '@mui/material/styles';
+import { PaletteMode } from '@mui/material';
 
-export const theme = createTheme({
+const getDesignTokens = (mode: PaletteMode) => ({
   palette: {
+    mode,
     primary: {
-      main: '#3f51b5',
-      light: '#757de8',
-      dark: '#002984',
+      main: mode === 'dark' ? '#6B8AFF' : '#3f51b5',
+      light: mode === 'dark' ? '#8AA2FF' : '#757de8',
+      dark: mode === 'dark' ? '#4D6EE6' : '#002984',
     },
     secondary: {
-      main: '#f50057',
-      light: '#ff4081',
-      dark: '#c51162',
+      main: mode === 'dark' ? '#FF4081' : '#f50057',
+      light: mode === 'dark' ? '#FF6B9D' : '#ff4081',
+      dark: mode === 'dark' ? '#E61B64' : '#c51162',
     },
     background: {
-      default: '#f5f5f5',
-      paper: '#ffffff',
+      default: mode === 'dark' ? '#121212' : '#f5f5f5',
+      paper: mode === 'dark' ? '#1E1E1E' : '#ffffff',
+    },
+    text: {
+      primary: mode === 'dark' ? '#ffffff' : '#000000',
+      secondary: mode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
     },
   },
   typography: {
@@ -33,8 +39,14 @@ export const theme = createTheme({
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+          borderRadius: 12,
+          backdropFilter: 'blur(8px)',
+          backgroundColor: mode === 'dark' 
+            ? 'rgba(30, 30, 30, 0.8)'
+            : 'rgba(255, 255, 255, 0.9)',
+          boxShadow: mode === 'dark'
+            ? '0 8px 32px rgba(0, 0, 0, 0.3)'
+            : '0 8px 32px rgba(0, 0, 0, 0.1)',
         },
       },
     },
@@ -43,6 +55,7 @@ export const theme = createTheme({
         root: {
           borderRadius: 8,
           textTransform: 'none',
+          fontWeight: 500,
         },
       },
     },
@@ -51,9 +64,26 @@ export const theme = createTheme({
         root: {
           '& .MuiOutlinedInput-root': {
             borderRadius: 8,
+            backgroundColor: mode === 'dark'
+              ? 'rgba(255, 255, 255, 0.05)'
+              : 'rgba(0, 0, 0, 0.02)',
           },
         },
       },
     },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          backgroundImage: 'none',
+        },
+      },
+    },
   },
-}); 
+  shape: {
+    borderRadius: 12,
+  },
+});
+
+export const createAppTheme = (mode: PaletteMode): Theme => {
+  return createTheme(getDesignTokens(mode));
+}; 

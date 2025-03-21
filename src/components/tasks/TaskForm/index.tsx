@@ -17,7 +17,7 @@ import {
   IconButton,
 } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
-import { TaskInput } from '../../../types';
+import { TaskInput, Task } from '../../../types';
 import FlagIcon from '@mui/icons-material/Flag';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
@@ -25,6 +25,7 @@ import AddTaskIcon from '@mui/icons-material/AddTask';
 import EditNoteIcon from '@mui/icons-material/EditNote';
 import CloseIcon from '@mui/icons-material/Close';
 import { alpha } from '@mui/material/styles';
+import { useTaskStore } from '../../../store/taskStore';
 
 type Priority = 'low' | 'medium' | 'high';
 
@@ -55,7 +56,7 @@ const getPriorityIcon = (priority: Priority) => {
 };
 
 interface TaskFormProps {
-  onSubmit: (task: TaskInput) => Promise<void>;
+  onSubmit: (task: TaskInput) => Task;
   onCancel?: () => void;
   initialValues?: TaskInput;
   isEdit?: boolean;
@@ -100,6 +101,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
+  const { tasks } = useTaskStore();
 
   useEffect(() => {
     // Focus the title input when the form opens
@@ -113,23 +115,52 @@ const TaskForm: React.FC<TaskFormProps> = ({
     }
   }, [isEdit]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const validateInput = (input: TaskInput): string | null => {
+    // Title validations
+    if (!input.title.trim()) {
+      return 'Title is required';
+    }
+    if (input.title.length > 100) {
+      return 'Title must be 100 characters or less';
+    }
+
+    // Check for duplicate title only when adding new tasks
+    if (!isEdit) {
+      const duplicateTask = tasks.find(
+        task => task.title.toLowerCase() === input.title.toLowerCase()
+      );
+      if (duplicateTask) {
+        return 'A task with this title already exists';
+      }
+    }
+
+    // Description validations
+    if (!input.description.trim()) {
+      return 'Description is required';
+    }
+    const wordCount = input.description.trim().split(/\s+/).length;
+    if (wordCount > 100) {
+      return 'Description must be 100 words or less';
+    }
+
+    return null;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validation
-    if (!formData.title.trim()) {
-      setError('Title is required');
-      titleInputRef.current?.focus();
-      return;
-    }
-    if (!formData.description.trim()) {
-      setError('Description is required');
+    const validationError = validateInput(formData);
+    if (validationError) {
+      setError(validationError);
+      if (validationError.includes('Title')) {
+        titleInputRef.current?.focus();
+      }
       return;
     }
 
     setIsSubmitting(true);
     try {
-      await onSubmit({
+      onSubmit({
         ...formData,
         priority: formData.priority || 'low',
       });
@@ -167,6 +198,17 @@ const TaskForm: React.FC<TaskFormProps> = ({
     if (e.key === 'Escape' && onCancel) {
       onCancel();
     }
+  };
+
+  const getHelperText = (field: 'title' | 'description') => {
+    if (error && error.toLowerCase().includes(field)) {
+      return error;
+    }
+    if (field === 'title') {
+      return `${formData.title.length}/100 characters`;
+    }
+    const wordCount = formData.description.trim().split(/\s+/).length;
+    return `${wordCount}/100 words`;
   };
 
   return (
@@ -280,6 +322,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
                     },
                   },
                 }}
+                helperText={getHelperText('title')}
               />
             </motion.div>
 
@@ -309,6 +352,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
                     },
                   },
                 }}
+                helperText={getHelperText('description')}
               />
             </motion.div>
 

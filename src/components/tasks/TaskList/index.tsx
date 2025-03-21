@@ -43,24 +43,29 @@ const TaskList: React.FC = () => {
     setEditingTask(task);
   };
 
-  const handleEditSubmit = async (updates: TaskInput) => {
-    if (editingTask) {
-      try {
-        // Check for duplicate title
-        const duplicateTask = tasks.find(
-          task => task.title === updates.title && task.id !== editingTask.id
-        );
-        
-        if (duplicateTask) {
-          throw new Error('A task with this title already exists');
-        }
-
-        editTask(editingTask.id, updates);
-        setEditingTask(null);
-      } catch (error) {
-        throw error; // Re-throw to be handled by the form
-      }
+  const handleEditSubmit = (updates: TaskInput): Task => {
+    if (!editingTask) {
+      throw new Error('No task is being edited');
     }
+
+    // Check for duplicate title
+    const duplicateTask = tasks.find(
+      task => task.title === updates.title && task.id !== editingTask.id
+    );
+    
+    if (duplicateTask) {
+      throw new Error('A task with this title already exists');
+    }
+
+    editTask(editingTask.id, updates);
+    setEditingTask(null);
+
+    // Return the updated task
+    return {
+      ...editingTask,
+      ...updates,
+      updatedAt: Date.now(),
+    };
   };
 
   const handleDelete = (taskId: string) => {
