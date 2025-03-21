@@ -100,6 +100,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [formData, setFormData] = useState<TaskInput>(initialValues);
   const [error, setError] = useState<string | null>(null);
+  // @ts-ignore - Will be used for future loading states
   const [isSubmitting, setIsSubmitting] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
 

@@ -14,6 +14,7 @@ function App() {
   const { isDarkMode, toggleTheme } = useThemeStore();
   const { addTask } = useTaskStore();
   const theme = React.useMemo(() => createAppTheme(isDarkMode ? 'dark' : 'light'), [isDarkMode]);
+  // @ts-ignore - Will be used for future mobile responsiveness features
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   return (

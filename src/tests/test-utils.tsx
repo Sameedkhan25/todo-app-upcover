@@ -1,10 +1,8 @@
 import React from 'react';
 import { render as rtlRender, RenderOptions } from '@testing-library/react';
 import { ThemeProvider } from '@mui/material/styles';
-import { theme } from '../theme';
-
-// Import your store provider if you're using Zustand
-import { TodoProvider } from '../store/TodoStore';
+import { createAppTheme } from '../theme';
+// import { useTaskStore } from '../store/taskStore';
 
 function render(
   ui: React.ReactElement,
@@ -12,8 +10,8 @@ function render(
 ) {
   const Wrapper = ({ children }: { children: React.ReactNode }) => {
     return (
-      <ThemeProvider theme={theme}>
-        <TodoProvider>{children}</TodoProvider>
+      <ThemeProvider theme={createAppTheme('light')}>
+        {children}
       </ThemeProvider>
     );
   };

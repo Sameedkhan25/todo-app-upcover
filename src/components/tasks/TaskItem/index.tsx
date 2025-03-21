@@ -13,7 +13,6 @@ import {
   useTheme,
   useMediaQuery,
 } from '@mui/material';
-import { motion, AnimatePresence } from 'framer-motion';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import FlagIcon from '@mui/icons-material/Flag';

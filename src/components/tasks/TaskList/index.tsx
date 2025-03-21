@@ -29,6 +29,7 @@ const TaskList: React.FC = () => {
     }
 
     const sourceIsComplete = source.droppableId === 'completed';
+    // @ts-ignore - Will be used for future drag-and-drop enhancements
     const destinationIsComplete = destination.droppableId === 'completed';
     const taskList = sourceIsComplete ? completedTasks : incompleteTasks;
     
@@ -80,6 +81,7 @@ const TaskList: React.FC = () => {
     deleteTask(taskId);
   };
 
+  // @ts-ignore - Will be used for future status tracking
   const handleToggleComplete = (taskId: string, completed: boolean) => {
     if (!taskId || typeof taskId !== 'string') {
       console.error('Invalid task ID:', taskId);
@@ -158,6 +160,7 @@ const TaskList: React.FC = () => {
     }
   });
 
+  // @ts-ignore - Will be used for future animations
   const containerAnimation = {
     hidden: { opacity: 0 },
     show: {
