@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Typography, Paper, Stack, Divider, useTheme, Container, Dialog } from '@mui/material';
+import { Box, Typography, Paper, Stack, Divider, useTheme, Container, Dialog, useMediaQuery } from '@mui/material';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTaskStore } from '../../../store/taskStore';
@@ -13,6 +13,7 @@ import { alpha } from '@mui/material/styles';
 
 const TaskList: React.FC = () => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { tasks, reorderTasks, editTask, deleteTask, toggleTaskStatus } = useTaskStore();
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   
@@ -125,17 +126,35 @@ const TaskList: React.FC = () => {
     mb: { xs: 2, sm: 3 },
     display: 'flex',
     alignItems: 'center',
-    gap: 1,
+    gap: 1.5,
     color: isCompleted ? theme.palette.success.main : theme.palette.primary.main,
-    fontWeight: 600,
-    fontSize: { xs: '1.25rem', sm: '1.5rem' },
     '& .MuiSvgIcon-root': {
-      fontSize: { xs: 24, sm: 28 },
+      fontSize: { xs: 28, sm: 32 },
+      filter: 'drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.1))',
     },
-    '& .MuiTypography-subtitle1': {
-      fontSize: { xs: '0.875rem', sm: '1rem' },
-      ml: 1,
-      color: 'text.secondary',
+    '& .section-title': {
+      fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      fontWeight: 700,
+      fontSize: { xs: '1.35rem', sm: '1.65rem' },
+      letterSpacing: '-0.01em',
+      color: theme.palette.text.primary,
+      display: 'flex',
+      alignItems: 'center',
+      gap: 1,
+    },
+    '& .task-count': {
+      fontSize: { xs: '0.9rem', sm: '1rem' },
+      fontWeight: 500,
+      color: theme.palette.text.secondary,
+      backgroundColor: theme.palette.action.hover,
+      padding: '0.2em 0.6em',
+      borderRadius: '1em',
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minWidth: '2em',
+      height: '1.75em',
+      boxShadow: 'inset 0 0 0 1px rgba(0, 0, 0, 0.05)',
     }
   });
 
@@ -206,20 +225,48 @@ const TaskList: React.FC = () => {
                   <Stack 
                     direction="row" 
                     alignItems="center" 
-                    spacing={1}
+                    spacing={1.5}
                     sx={getSectionStyle(false)}
                   >
                     <AssignmentIcon />
-                    <Typography variant="h5" component="h2">
-                      Incomplete Tasks
+                    <Box className="section-title">
+                      In Progress Tasks
                       <Typography
                         component="span"
-                        variant="subtitle1"
+                        className="task-count"
                       >
-                        ({incompleteTasks.length})
+                        {incompleteTasks.length}
                       </Typography>
-                    </Typography>
+                    </Box>
                   </Stack>
+                  
+                  {isMobile && (
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{
+                        mt: 1.5,
+                        mb: 2.5,
+                        fontStyle: 'italic',
+                        fontSize: '0.875rem',
+                        opacity: 0.8,
+                        textAlign: 'center',
+                        fontFamily: '"Inter", sans-serif',
+                        letterSpacing: '0.01em',
+                        background: (theme) => alpha(theme.palette.background.paper, 0.6),
+                        backdropFilter: 'blur(8px)',
+                        borderRadius: 1,
+                        py: 1,
+                        px: 2,
+                        mx: 'auto',
+                        maxWidth: 'fit-content',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                      }}
+                    >
+                      Swipe right to complete, swipe left to edit or delete
+                    </Typography>
+                  )}
                   
                   <Box mt={2}>
                     <Droppable droppableId="incomplete">
@@ -304,19 +351,19 @@ const TaskList: React.FC = () => {
                   <Stack 
                     direction="row" 
                     alignItems="center" 
-                    spacing={1}
+                    spacing={1.5}
                     sx={getSectionStyle(true)}
                   >
                     <CheckCircleIcon />
-                    <Typography variant="h5" component="h2">
+                    <Box className="section-title">
                       Completed Tasks
                       <Typography
                         component="span"
-                        variant="subtitle1"
+                        className="task-count"
                       >
-                        ({completedTasks.length})
+                        {completedTasks.length}
                       </Typography>
-                    </Typography>
+                    </Box>
                   </Stack>
                   
                   <Box mt={2}>
