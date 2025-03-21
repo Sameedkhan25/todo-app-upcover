@@ -56,6 +56,7 @@ const getDesignTokens = (mode: PaletteMode) => ({
           borderRadius: 8,
           textTransform: 'none',
           fontWeight: 500,
+          variants: []
         },
       },
     },

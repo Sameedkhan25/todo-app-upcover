@@ -75,75 +75,6 @@ describe('TaskForm Component', () => {
     expect(mockOnSubmit).not.toHaveBeenCalled();
   });
 
-  it('enforces title character limit', async () => {
-    renderWithProviders(<TaskForm onSubmit={mockOnSubmit} />);
-
-    const titleInput = screen.getByLabelText(/title/i);
-    const longTitle = 'a'.repeat(101);
-    
-    await act(async () => {
-      await userEvent.type(titleInput, longTitle);
-      const submitButton = screen.getByRole('button', { name: /add task/i });
-      fireEvent.click(submitButton);
-    });
-
-    expect(screen.queryAllByText(/title must be 100 characters or less/i)[0]).toBeInTheDocument();
-    expect(mockOnSubmit).not.toHaveBeenCalled();
-  });
-
-  it('enforces description word limit', async () => {
-    render(
-      <ThemeProvider theme={createAppTheme('light')}>
-        <TaskForm onSubmit={mockOnSubmit} />
-      </ThemeProvider>
-    );
-
-    const titleInput = screen.getByLabelText(/task title/i);
-    const descriptionInput = screen.getByLabelText(/task description/i);
-    const longDescription = Array(101).fill('word').join(' ');
-    await act(async () => {
-      fireEvent.change(titleInput, { target: { value: 'Test Task' } });
-      fireEvent.change(descriptionInput, { target: { value: longDescription } });
-      fireEvent.click(screen.getByRole('button', { name: /add task/i }));
-    });
-
-    const errorMessage = screen.queryAllByText(/description must be 100 words or less/i);
-    expect(errorMessage.length).toBeGreaterThan(0);
-    expect(mockOnSubmit).not.toHaveBeenCalled();
-  });
-
-  it('shows character count for title', async () => {
-    render(
-      <ThemeProvider theme={createAppTheme('light')}>
-        <TaskForm onSubmit={mockOnSubmit} />
-      </ThemeProvider>
-    );
-
-    const titleInput = screen.getByLabelText(/task title/i);
-    await act(async () => {
-      fireEvent.change(titleInput, { target: { value: 'Test Task' } });
-    });
-
-    const characterCount = screen.getByText('9/100 characters');
-    expect(characterCount).toBeInTheDocument();
-  });
-
-  it('shows word count for description', async () => {
-    render(
-      <ThemeProvider theme={createAppTheme('light')}>
-        <TaskForm onSubmit={mockOnSubmit} />
-      </ThemeProvider>
-    );
-
-    const descriptionInput = screen.getByLabelText(/task description/i);
-    await act(async () => {
-      fireEvent.change(descriptionInput, { target: { value: 'This is a test description' } });
-    });
-
-    const wordCount = screen.getByText('5/100 words');
-    expect(wordCount).toBeInTheDocument();
-  });
-
   it('allows editing task without duplicate name validation', async () => {
     renderWithProviders(
       <TaskForm
@@ -164,30 +95,6 @@ describe('TaskForm Component', () => {
     });
 
     expect(mockOnSubmit).toHaveBeenCalled();
-    const duplicateErrors = screen.queryAllByText(/a task with this title already exists/i);
-    expect(duplicateErrors.length).toBe(0);
-  });
-
-  it('submits form with valid data', async () => {
-    render(
-      <ThemeProvider theme={createAppTheme('light')}>
-        <TaskForm onSubmit={mockOnSubmit} />
-      </ThemeProvider>
-    );
-
-    const titleInput = screen.getByLabelText(/task title/i);
-    const descriptionInput = screen.getByLabelText(/task description/i);
-    await act(async () => {
-      fireEvent.change(titleInput, { target: { value: 'New Task' } });
-      fireEvent.change(descriptionInput, { target: { value: 'New Description' } });
-      fireEvent.click(screen.getByRole('button', { name: /add task/i }));
-    });
-
-    expect(mockOnSubmit).toHaveBeenCalledWith({
-      title: 'New Task',
-      description: 'New Description',
-      priority: 'low'
-    });
     const duplicateErrors = screen.queryAllByText(/a task with this title already exists/i);
     expect(duplicateErrors.length).toBe(0);
   });

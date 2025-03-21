@@ -81,10 +81,10 @@ describe('TaskList', () => {
   it('renders incomplete and completed task sections', () => {
     render(<TaskList />);
     
-    expect(screen.getByText('Incomplete Tasks')).toBeInTheDocument();
-    expect(screen.getByText('(2)')).toBeInTheDocument();
+    expect(screen.getByText('In Progress Tasks')).toBeInTheDocument();
+    expect(screen.getByText('2')).toBeInTheDocument();
     expect(screen.getByText('Completed Tasks')).toBeInTheDocument();
-    expect(screen.getByText('(1)')).toBeInTheDocument();
+    expect(screen.getByText('1')).toBeInTheDocument();
   });
 
   it('displays tasks in correct sections', () => {

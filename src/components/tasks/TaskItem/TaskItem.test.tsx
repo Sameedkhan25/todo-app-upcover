@@ -10,13 +10,6 @@ jest.mock('@mui/material', () => ({
   useMediaQuery: () => true,
 }));
 
-// Mock ReactConfetti
-jest.mock('react-confetti', () => {
-  return function MockConfetti() {
-    return null;
-  };
-});
-
 type Priority = 'low' | 'medium' | 'high';
 type TaskWithPriority = Task & { priority: Priority };
 
@@ -88,7 +81,7 @@ describe('TaskItem Component', () => {
       />
     );
 
-    const editButton = screen.getByLabelText('edit');
+    const editButton = screen.getByTestId('edit-button');
     fireEvent.click(editButton);
 
     expect(mockHandlers.onEdit).toHaveBeenCalledWith(mockTask);
@@ -104,7 +97,7 @@ describe('TaskItem Component', () => {
       />
     );
 
-    const deleteButton = screen.getByLabelText('delete');
+    const deleteButton = screen.getByTestId('delete-button');
     fireEvent.click(deleteButton);
 
     expect(mockHandlers.onDelete).toHaveBeenCalledWith(mockTask.id);
