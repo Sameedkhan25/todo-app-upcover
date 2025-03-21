@@ -425,18 +425,19 @@ const TaskForm: React.FC<TaskFormProps> = ({
                 {isEdit && onCancel && (
                   <Button
                     variant="outlined"
-                    size="large"
                     onClick={onCancel}
                     sx={{
                       borderRadius: 2,
-                      py: { xs: 1.5, sm: 2 },
-                      px: { xs: 3, sm: 4 },
+                      py: { xs: 0.75, sm: 1.25 },
+                      px: { xs: 2, sm: 3 },
                       textTransform: 'none',
-                      fontSize: { xs: '1rem', sm: '1.125rem' },
+                      fontSize: { xs: '0.875rem', sm: '1rem' },
                       fontWeight: 600,
-                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      minHeight: { xs: 36, sm: 44 },
+                      minWidth: { xs: 'auto', sm: 100 },
+                      transition: 'all 0.2s ease',
                       '&:hover': {
-                        transform: 'translateY(-2px)',
+                        backgroundColor: 'action.hover',
                       },
                     }}
                   >
@@ -446,18 +447,19 @@ const TaskForm: React.FC<TaskFormProps> = ({
                 <Button
                   type="submit"
                   variant="contained"
-                  size={isMobile ? "medium" : "large"}
                   disabled={isSubmitting}
                   startIcon={isEdit ? <EditNoteIcon /> : <AddTaskIcon />}
                   sx={{
                     borderRadius: 2,
-                    py: { xs: 1.5, sm: 2 },
-                    px: { xs: 3, sm: 4 },
+                    py: { xs: 0.75, sm: 1.25 },
+                    px: { xs: 2, sm: 3 },
                     textTransform: 'none',
-                    fontSize: { xs: '1rem', sm: '1.125rem' },
+                    fontSize: { xs: '0.875rem', sm: '1rem' },
                     fontWeight: 600,
+                    minHeight: { xs: 36, sm: 44 },
+                    minWidth: { xs: 'auto', sm: 120 },
                     boxShadow: 2,
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transition: 'all 0.2s ease',
                     '&:hover': {
                       boxShadow: 4,
                       transform: 'translateY(-2px)',
@@ -471,7 +473,13 @@ const TaskForm: React.FC<TaskFormProps> = ({
                     },
                   }}
                 >
-                  {isSubmitting ? 'Processing...' : (isEdit ? 'Update Task' : 'Add Task')}
+                  {isSubmitting ? 'Processing...' : (
+                    isMobile ? (
+                      isEdit ? 'Update' : 'Add'
+                    ) : (
+                      isEdit ? 'Update Task' : 'Add Task'
+                    )
+                  )}
                 </Button>
               </Stack>
             </motion.div>

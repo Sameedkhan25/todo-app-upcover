@@ -16,8 +16,8 @@ const TaskList: React.FC = () => {
   const { tasks, reorderTasks, editTask, deleteTask, toggleTaskStatus } = useTaskStore();
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   
-  const incompleteTasks = tasks.filter(task => !task.completed);
-  const completedTasks = tasks.filter(task => task.completed);
+  const incompleteTasks = tasks?.filter(task => task?.completed === false) ?? [];
+  const completedTasks = tasks?.filter(task => task?.completed === true) ?? [];
   
   const handleDragEnd = (result: DropResult) => {
     const { source, destination } = result;

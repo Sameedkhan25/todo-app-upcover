@@ -19,8 +19,10 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import FlagIcon from '@mui/icons-material/Flag';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import { Task } from '../../../types';
 import ReactConfetti from 'react-confetti';
+import { useSwipeable } from 'react-swipeable';
 
 type Priority = 'low' | 'medium' | 'high';
 
@@ -67,6 +69,7 @@ const TaskItem: React.FC<TaskItemProps> = ({
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [isHovered, setIsHovered] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [swipeOffset, setSwipeOffset] = useState(0);
   const [windowSize, setWindowSize] = useState({
     width: window.innerWidth,
     height: window.innerHeight,
@@ -84,6 +87,45 @@ const TaskItem: React.FC<TaskItemProps> = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  const swipeHandlers = useSwipeable({
+    onSwiping: (event) => {
+      if (isMobile) {
+        const newOffset = event.deltaX;
+        // Limit the swipe range
+        if (newOffset >= -200 && newOffset <= 100) {
+          setSwipeOffset(newOffset);
+        }
+      }
+    },
+    onSwipedLeft: () => {
+      if (isMobile) {
+        setSwipeOffset(-200); // Full left swipe reveals edit/delete
+      }
+    },
+    onSwipedRight: () => {
+      if (isMobile) {
+        setSwipeOffset(100); // Full right swipe reveals complete
+        if (!task.completed) {
+          handleToggleComplete({ target: { checked: true } } as React.ChangeEvent<HTMLInputElement>);
+        }
+      }
+    },
+    onTouchEndOrOnMouseUp: () => {
+      if (isMobile) {
+        // Snap to positions
+        if (swipeOffset > 50) {
+          setSwipeOffset(100);
+        } else if (swipeOffset < -100) {
+          setSwipeOffset(-200);
+        } else {
+          setSwipeOffset(0);
+        }
+      }
+    },
+    trackMouse: true,
+    trackTouch: true,
+  });
+
   const handleToggleComplete = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newCompletedState = event.target.checked;
     if (newCompletedState) {
@@ -91,6 +133,32 @@ const TaskItem: React.FC<TaskItemProps> = ({
       setTimeout(() => setShowConfetti(false), 3000);
     }
     onToggleComplete(task.id, newCompletedState);
+    if (isMobile) {
+      setSwipeOffset(0);
+    }
+  };
+
+  const handleEdit = () => {
+    onEdit(task);
+    if (isMobile) {
+      setSwipeOffset(0);
+    }
+  };
+
+  const handleDelete = () => {
+    onDelete(task.id);
+    if (isMobile) {
+      setSwipeOffset(0);
+    }
+  };
+
+  const handleActionClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click event
+    if (e.currentTarget.getAttribute('data-action') === 'edit') {
+      handleEdit();
+    } else if (e.currentTarget.getAttribute('data-action') === 'delete') {
+      handleDelete();
+    }
   };
 
   return (
@@ -104,96 +172,177 @@ const TaskItem: React.FC<TaskItemProps> = ({
           gravity={0.3}
         />
       )}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, x: -100 }}
-        whileHover={{ scale: 1.02, translateY: -4 }}
-        transition={{ 
-          type: "spring",
-          stiffness: 500,
-          damping: 30
+      <Box
+        sx={{
+          position: 'relative',
+          opacity: 1,
         }}
-        onHoverStart={() => setIsHovered(true)}
-        onHoverEnd={() => setIsHovered(false)}
       >
-        <Card
-          sx={{
-            position: 'relative',
-            borderRadius: { xs: 2, sm: 3 },
-            boxShadow: isHovered ? 4 : 2,
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            opacity: task.completed ? 0.8 : 1,
-            transform: task.completed ? 'scale(0.98)' : 'scale(1)',
-            bgcolor: (theme) => 
-              task.completed 
-                ? alpha(theme.palette.background.paper, 0.7)
-                : theme.palette.background.paper,
-            '&:hover': {
-              boxShadow: 8,
-              '& .MuiCardContent-root': {
-                bgcolor: (theme) => alpha(theme.palette.action.hover, 0.05),
-              },
-            },
-            overflow: 'visible',
-          }}
-        >
-          <CardContent
+        {/* Mobile Swipe Actions Background */}
+        {isMobile && (
+          <Box
             sx={{
-              transition: 'background-color 0.3s ease',
-              p: { xs: 2, sm: 3 },
-              '&:last-child': { pb: { xs: 2, sm: 3 } },
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              display: 'flex',
+              justifyContent: 'space-between',
+              borderRadius: { xs: 2, sm: 3 },
+              overflow: 'hidden',
+              zIndex: 0,
             }}
           >
-            <Stack 
-              direction="row" 
-              spacing={2} 
-              alignItems="flex-start"
-              sx={{ position: 'relative' }}
+            {/* Right swipe - Complete */}
+            <Box
+              sx={{
+                position: 'absolute',
+                left: 0,
+                width: '100px',
+                height: '100%',
+                bgcolor: 'success.main',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
             >
-              <Checkbox
-                checked={task.completed}
-                onChange={handleToggleComplete}
+              <CheckCircleOutlineIcon sx={{ color: 'white', fontSize: '2rem' }} />
+            </Box>
+            {/* Left swipe - Edit/Delete */}
+            <Box
+              sx={{
+                position: 'absolute',
+                right: 0,
+                width: '200px',
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+              }}
+            >
+              <Box
+                component="button"
+                onClick={handleActionClick}
+                data-action="edit"
                 sx={{
-                  '& .MuiSvgIcon-root': {
-                    fontSize: { xs: 24, sm: 28 },
-                    transition: 'all 0.2s ease',
-                  },
-                  '&.Mui-checked': {
-                    color: (theme) => theme.palette[getPriorityColor(task.priority)].main,
-                    '& .MuiSvgIcon-root': {
-                      transform: 'scale(1.2)',
-                    },
-                  },
+                  flex: 1,
+                  height: '100%',
+                  bgcolor: 'primary.main',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s ease',
                   '&:hover': {
-                    '& .MuiSvgIcon-root': {
-                      transform: 'scale(1.1)',
-                    },
+                    bgcolor: 'primary.dark',
+                  },
+                  '&:active': {
+                    bgcolor: 'primary.dark',
+                    transform: 'scale(0.98)',
                   },
                 }}
-              />
-              
-              <Box sx={{ flexGrow: 1 }}>
-                <Stack 
-                  direction={{ xs: 'column', sm: 'row' }} 
-                  spacing={{ xs: 1, sm: 2 }} 
-                  alignItems={{ xs: 'flex-start', sm: 'center' }} 
-                  mb={1}
-                >
-                  <Typography
-                    variant="h6"
-                    component="div"
+              >
+                <EditIcon sx={{ color: 'white', fontSize: '1.5rem' }} />
+              </Box>
+              <Box
+                component="button"
+                onClick={handleActionClick}
+                data-action="delete"
+                sx={{
+                  flex: 1,
+                  height: '100%',
+                  bgcolor: 'error.main',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s ease',
+                  '&:hover': {
+                    bgcolor: 'error.dark',
+                  },
+                  '&:active': {
+                    bgcolor: 'error.dark',
+                    transform: 'scale(0.98)',
+                  },
+                }}
+              >
+                <DeleteIcon sx={{ color: 'white', fontSize: '1.5rem' }} />
+              </Box>
+            </Box>
+          </Box>
+        )}
+
+        {/* Main Card Content */}
+        <Box
+          {...(isMobile ? swipeHandlers : {})}
+          sx={{
+            position: 'relative',
+            zIndex: 1,
+            transform: isMobile ? `translateX(${swipeOffset}px)` : 'none',
+            transition: isMobile ? 'transform 0.2s ease-out' : 'none',
+          }}
+        >
+          <Card
+            onMouseEnter={() => !isMobile && setIsHovered(true)}
+            onMouseLeave={() => !isMobile && setIsHovered(false)}
+            sx={{
+              position: 'relative',
+              borderRadius: { xs: 2, sm: 3 },
+              boxShadow: isHovered ? 4 : 2,
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              opacity: task.completed ? 0.8 : 1,
+              transform: task.completed ? 'scale(0.98)' : 'scale(1)',
+              bgcolor: (theme) => 
+                task.completed 
+                  ? alpha(theme.palette.background.paper, 0.7)
+                  : theme.palette.background.paper,
+              '&:hover': {
+                boxShadow: !isMobile ? 8 : 2,
+                '& .MuiCardContent-root': {
+                  bgcolor: (theme) => !isMobile ? alpha(theme.palette.action.hover, 0.05) : 'transparent',
+                },
+              },
+              overflow: 'visible',
+            }}
+          >
+            <CardContent
+              sx={{
+                transition: 'background-color 0.3s ease',
+                p: { xs: 2, sm: 3 },
+                '&:last-child': { pb: { xs: 2, sm: 3 } },
+                position: 'relative',
+              }}
+            >
+              <Stack 
+                direction="row" 
+                spacing={2} 
+                alignItems="flex-start"
+                sx={{ position: 'relative' }}
+              >
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                  <Checkbox
+                    checked={task.completed}
+                    onChange={handleToggleComplete}
                     sx={{
-                      fontSize: { xs: '1rem', sm: '1.25rem' },
-                      textDecoration: task.completed ? 'line-through' : 'none',
-                      color: task.completed ? 'text.secondary' : 'text.primary',
-                      transition: 'all 0.2s ease',
-                      wordBreak: 'break-word',
+                      '& .MuiSvgIcon-root': {
+                        fontSize: { xs: 24, sm: 28 },
+                        transition: 'all 0.2s ease',
+                      },
+                      '&.Mui-checked': {
+                        color: (theme) => theme.palette[getPriorityColor(task.priority)].main,
+                        '& .MuiSvgIcon-root': {
+                          transform: 'scale(1.2)',
+                        },
+                      },
+                      '&:hover': {
+                        '& .MuiSvgIcon-root': {
+                          transform: 'scale(1.1)',
+                        },
+                      },
                     }}
-                  >
-                    {task.title}
-                  </Typography>
-                  
+                  />
                   <Chip
                     icon={getPriorityIcon(task.priority)}
                     label={task.priority}
@@ -202,95 +351,119 @@ const TaskItem: React.FC<TaskItemProps> = ({
                     sx={{
                       textTransform: 'capitalize',
                       fontWeight: 500,
-                      transition: 'all 0.2s ease',
+                      height: { xs: 24, sm: 32 },
+                      minWidth: { xs: 72, sm: 86 },
                       '& .MuiChip-icon': {
                         fontSize: { xs: 16, sm: 20 },
+                        marginLeft: { xs: 0.5, sm: 1 },
                       },
-                      '&:hover': {
-                        transform: 'scale(1.05)',
+                      '& .MuiChip-label': {
+                        px: { xs: 1, sm: 1.5 },
                       },
                     }}
                   />
-                </Stack>
-
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{
-                    textDecoration: task.completed ? 'line-through' : 'none',
-                    opacity: task.completed ? 0.7 : 1,
-                    transition: 'all 0.2s ease',
-                    fontSize: { xs: '0.875rem', sm: '1rem' },
-                    wordBreak: 'break-word',
-                  }}
-                >
-                  {task.description}
-                </Typography>
-              </Box>
-
-              <AnimatePresence>
-                {(isHovered || task.completed || isMobile) && (
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                </Box>
+                
+                <Box sx={{ flexGrow: 1, pr: !isMobile ? 11 : 0 }}>
+                  <Stack 
+                    direction="column"
+                    spacing={1}
+                    sx={{ width: '100%' }}
                   >
-                    <Stack 
-                      direction={{ xs: 'row', sm: 'row' }} 
-                      spacing={1}
+                    <Typography
+                      variant="h6"
+                      component="div"
                       sx={{
-                        position: { xs: 'static', sm: 'absolute' },
-                        top: { sm: '50%' },
-                        right: { sm: theme.spacing(2) },
-                        transform: { sm: 'translateY(-50%)' },
+                        fontSize: { xs: '1.125rem', sm: '1.25rem' },
+                        fontWeight: 600,
+                        textDecoration: task.completed ? 'line-through' : 'none',
+                        color: task.completed ? 'text.secondary' : 'text.primary',
+                        transition: 'all 0.2s ease',
+                        wordBreak: 'break-word',
+                        width: '100%',
                       }}
                     >
-                      <Tooltip title="Edit task">
-                        <IconButton
-                          size={isMobile ? "small" : "medium"}
-                          onClick={() => onEdit(task)}
-                          aria-label="edit"
-                          sx={{
-                            color: 'primary.main',
-                            bgcolor: 'primary.lighter',
-                            '&:hover': { 
-                              bgcolor: 'primary.light',
-                              transform: 'scale(1.1)',
-                            },
-                            transition: 'all 0.2s ease',
-                          }}
-                        >
-                          <EditIcon fontSize={isMobile ? "small" : "medium"} />
-                        </IconButton>
-                      </Tooltip>
-                      
-                      <Tooltip title="Delete task">
-                        <IconButton
-                          size={isMobile ? "small" : "medium"}
-                          onClick={() => onDelete(task.id)}
-                          aria-label="delete"
-                          sx={{
-                            color: 'error.main',
-                            bgcolor: 'error.lighter',
-                            '&:hover': { 
-                              bgcolor: 'error.light',
-                              transform: 'scale(1.1)',
-                            },
-                            transition: 'all 0.2s ease',
-                          }}
-                        >
-                          <DeleteIcon fontSize={isMobile ? "small" : "medium"} />
-                        </IconButton>
-                      </Tooltip>
-                    </Stack>
-                  </motion.div>
+                      {task.title}
+                    </Typography>
+
+                    {task.description && (
+                      <Typography
+                        variant="body1"
+                        color="text.secondary"
+                        sx={{
+                          textDecoration: task.completed ? 'line-through' : 'none',
+                          opacity: task.completed ? 0.7 : 1,
+                          transition: 'all 0.2s ease',
+                          fontSize: { xs: '0.9375rem', sm: '1rem' },
+                          lineHeight: 1.6,
+                          wordBreak: 'break-word',
+                        }}
+                      >
+                        {task.description}
+                      </Typography>
+                    )}
+                  </Stack>
+                </Box>
+
+                {/* Desktop Actions */}
+                {!isMobile && (
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: '50%',
+                      right: theme.spacing(3),
+                      transform: 'translateY(-50%)',
+                      zIndex: 2,
+                      opacity: isHovered || task.completed ? 1 : 0,
+                      transition: 'opacity 0.2s ease',
+                      display: 'flex',
+                      gap: 1,
+                    }}
+                  >
+                    <Tooltip title="Edit task">
+                      <IconButton
+                        onClick={handleEdit}
+                        aria-label="edit"
+                        size="small"
+                        sx={{
+                          color: 'white',
+                          bgcolor: 'primary.main',
+                          width: 32,
+                          height: 32,
+                          '&:hover': { 
+                            bgcolor: 'primary.dark',
+                          },
+                        }}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    
+                    <Tooltip title="Delete task">
+                      <IconButton
+                        onClick={handleDelete}
+                        aria-label="delete"
+                        size="small"
+                        sx={{
+                          color: 'white',
+                          bgcolor: 'error.main',
+                          width: 32,
+                          height: 32,
+                          '&:hover': { 
+                            bgcolor: 'error.dark',
+                          },
+                        }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
                 )}
-              </AnimatePresence>
-            </Stack>
-          </CardContent>
-        </Card>
-      </motion.div>
+              </Stack>
+            </CardContent>
+          </Card>
+        </Box>
+      </Box>
     </>
   );
 };
